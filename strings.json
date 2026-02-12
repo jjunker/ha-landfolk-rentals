@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Landfolk Rentals Calendar",
+        "description": "Enter your Landfolk iCal calendar URL and configure check-in/check-out times.",
+        "data": {
+          "calendar_url": "Calendar URL",
+          "checkin_time": "Check-in Time (HH:MM)",
+          "checkout_time": "Check-out Time (HH:MM)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to calendar URL",
+      "invalid_calendar": "Invalid calendar format",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "Calendar is already configured"
+    }
+  }
+}
