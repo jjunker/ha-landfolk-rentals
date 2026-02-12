@@ -1,0 +1,7 @@
+{
+  "name": "Landfolk Rentals Calendar",
+  "render_readme": true,
+  "domains": ["calendar"],
+  "iot_class": "Cloud Polling",
+  "homeassistant": "2024.1.0"
+}
