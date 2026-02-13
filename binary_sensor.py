@@ -47,12 +47,16 @@ class LandfolkActiveRentalSensor(BinarySensorEntity):
         self._attr_device_class = BinarySensorDeviceClass.OCCUPANCY
         self._attr_icon = "mdi:home-account"
         
-        # Get configurable check-in/out times
+        # Get configurable check-in/out times and exclude blocked option
+        from .const import CONF_EXCLUDE_BLOCKED, DEFAULT_EXCLUDE_BLOCKED
         self._checkin_time = config_entry.data.get(
             CONF_CHECKIN_TIME, DEFAULT_CHECKIN_TIME
         )
         self._checkout_time = config_entry.data.get(
             CONF_CHECKOUT_TIME, DEFAULT_CHECKOUT_TIME
+        )
+        self._exclude_blocked = config_entry.data.get(
+            CONF_EXCLUDE_BLOCKED, DEFAULT_EXCLUDE_BLOCKED
         )
         
         self._current_event = None
@@ -90,6 +94,9 @@ class LandfolkActiveRentalSensor(BinarySensorEntity):
             if component.name == "VEVENT":
                 event = self._parse_event(component)
                 if event and event["start"] <= now < event["end"]:
+                    # Filter blocked events if configured
+                    if self._exclude_blocked and "blocked" in event["summary"].lower():
+                        continue
                     self._current_event = event
                     return
         

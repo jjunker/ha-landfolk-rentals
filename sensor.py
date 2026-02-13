@@ -39,12 +39,22 @@ class LandfolkUpcomingRentalsSensor(SensorEntity):
         self._attr_native_unit_of_measurement = "rentals"
         
         # Get configurable check-in/out times
-        from .const import CONF_CHECKIN_TIME, CONF_CHECKOUT_TIME, DEFAULT_CHECKIN_TIME, DEFAULT_CHECKOUT_TIME
+        from .const import (
+            CONF_CHECKIN_TIME,
+            CONF_CHECKOUT_TIME,
+            CONF_EXCLUDE_BLOCKED,
+            DEFAULT_CHECKIN_TIME,
+            DEFAULT_CHECKOUT_TIME,
+            DEFAULT_EXCLUDE_BLOCKED,
+        )
         self._checkin_time = config_entry.data.get(
             CONF_CHECKIN_TIME, DEFAULT_CHECKIN_TIME
         )
         self._checkout_time = config_entry.data.get(
             CONF_CHECKOUT_TIME, DEFAULT_CHECKOUT_TIME
+        )
+        self._exclude_blocked = config_entry.data.get(
+            CONF_EXCLUDE_BLOCKED, DEFAULT_EXCLUDE_BLOCKED
         )
 
     @property
@@ -101,6 +111,9 @@ class LandfolkUpcomingRentalsSensor(SensorEntity):
             if component.name == "VEVENT":
                 event = self._parse_event(component)
                 if event and event["start"] >= now:
+                    # Filter blocked events if configured
+                    if self._exclude_blocked and "blocked" in event["summary"].lower():
+                        continue
                     events.append(event)
         
         # Sort events by start time
