@@ -106,6 +106,73 @@ content: |
 
 For more dashboard examples, see [dashboard-example.yaml](dashboard-example.yaml).
 
+## Advanced: Guest Mode with Manual Override
+
+If you want to combine automatic rental detection with manual control for personal guests, create a template binary sensor:
+
+### Step 1: Create Helper for Manual Override
+
+Go to **Settings** → **Devices & Services** → **Helpers** → **Create Helper** → **Toggle**
+- Name: "Guest Mode Override"
+- Entity ID will be: `input_boolean.guest_mode_override`
+
+### Step 2: Create Template Binary Sensor
+
+Add to your `configuration.yaml`:
+
+```yaml
+template:
+  - binary_sensor:
+      - name: "Guest Mode"
+        unique_id: guest_mode_combined
+        device_class: occupancy
+        state: >
+          {{ is_state('binary_sensor.landfolk_active_rental', 'on') 
+             or is_state('input_boolean.guest_mode_override', 'on') }}
+        icon: >
+          {% if is_state('input_boolean.guest_mode_override', 'on') %}
+            mdi:account-cog
+          {% elif is_state('binary_sensor.landfolk_active_rental', 'on') %}
+            mdi:home-account
+          {% else %}
+            mdi:home-outline
+          {% endif %}
+        attributes:
+          source: >
+            {% if is_state('input_boolean.guest_mode_override', 'on') %}
+              Manual Override
+            {% elif is_state('binary_sensor.landfolk_active_rental', 'on') %}
+              Active Rental
+            {% else %}
+              Inactive
+            {% endif %}
+```
+
+### Step 3: Use in Automations
+
+Now use `binary_sensor.guest_mode` in all your automations:
+
+```yaml
+alias: Turn on lights at sunset during guest mode
+triggers:
+  - platform: sun
+    event: sunset
+conditions:
+  - condition: state
+    entity_id: binary_sensor.guest_mode
+    state: "on"
+actions:
+  - service: light.turn_on
+    target:
+      entity_id: light.outdoor_lights
+```
+
+**Benefits:**
+- ✅ Automatically detects Landfolk rentals
+- ✅ Manual control via toggle for personal guests
+- ✅ Single sensor to use in all automations
+- ✅ Follows Home Assistant conventions
+
 ## Automation Examples
 
 For comprehensive automation examples including guest mode, climate control, security, notifications, and more, see [AUTOMATION_EXAMPLES.md](AUTOMATION_EXAMPLES.md).
