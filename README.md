@@ -10,7 +10,8 @@ A custom Home Assistant integration that imports your Landfolk rental bookings a
 - 🔄 Automatic updates every hour
 - 📱 Works with Home Assistant calendar dashboard
 - 📊 Dedicated sensor showing count and list of all upcoming rentals
-- 🌙 Automatically calculates rental nights and duration
+- � Binary sensor for active rental detection (perfect for "guest mode")
+- �🌙 Automatically calculates rental nights and duration
 - 🎯 Easy integration with dashboard cards and automations
 
 ## Installation
@@ -54,7 +55,7 @@ A custom Home Assistant integration that imports your Landfolk rental bookings a
 
 ## Usage
 
-Once configured, the integration creates two entities:
+Once configured, the integration creates three entities:
 
 ### Calendar Entity
 - **Entity ID**: `calendar.landfolk_rentals`
@@ -67,6 +68,12 @@ Once configured, the integration creates two entities:
 - State: Number of upcoming rentals
 - Attributes include full list of upcoming events with details
 - Perfect for dashboard lists and automations
+
+### Binary Sensor Entity
+- **Entity ID**: `binary_sensor.landfolk_active_rental`
+- State: ON when a rental is currently active, OFF otherwise
+- Attributes: Current rental details (summary, check-in, check-out, nights)
+- Perfect for triggering "guest mode" automations
 
 ### Display Upcoming Rentals List
 
@@ -93,43 +100,9 @@ content: |
   <sub>Last updated: {{ relative_time(strptime(state_attr('sensor.landfolk_upcoming_rentals', 'last_updated'), '%Y-%m-%dT%H:%M:%S.%f%z')) }}</sub>
 ```
 
-### Example Automations
+## Automation Examples
 
-**Notify before guest arrival:**
-```yaml
-automation:
-  - alias: "Notify before guest arrival"
-    trigger:
-      - platform: calendar
-        event: start
-        entity_id: calendar.landfolk_rentals
-        offset: "-2:0:0"  # 2 hours before check-in
-    action:
-      - service: notify.mobile_app
-        data:
-          message: "Guest checking in soon!"
-```
-
-**Turn on heating when rentals are upcoming:**
-```yaml
-automation:
-  - alias: "Prepare for guests"
-    trigger:
-      - platform: numeric_state
-        entity_id: sensor.landfolk_upcoming_rentals
-        above: 0
-    condition:
-      - condition: template
-        value_template: >
-          {% set next = state_attr('sensor.landfolk_upcoming_rentals', 'next_rental') %}
-          {{ next and (as_timestamp(next.start) - as_timestamp(now())) < 86400 }}
-    action:
-      - service: climate.set_temperature
-        target:
-          entity_id: climate.house
-        data:
-          temperature: 21
-```
+For comprehensive automation examples including guest mode, climate control, security, notifications, and more, see [AUTOMATION_EXAMPLES.md](AUTOMATION_EXAMPLES.md).
 
 ## Troubleshooting
 
