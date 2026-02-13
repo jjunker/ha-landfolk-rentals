@@ -30,8 +30,10 @@ A custom Home Assistant integration that imports your Landfolk rental bookings a
 
 ### Manual Installation
 
-1. Copy the `landfolk_rentals` folder to your `custom_components` directory
-2. Restart Home Assistant
+1. Download the latest release from GitHub
+2. Create a `landfolk_rentals` folder in your `custom_components` directory
+3. Copy all Python files (`__init__.py`, `calendar.py`, `sensor.py`, `config_flow.py`, `const.py`) and JSON files (`manifest.json`, `strings.json`) into the `landfolk_rentals` folder
+4. Restart Home Assistant
 
 ## Configuration
 
