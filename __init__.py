@@ -14,7 +14,7 @@ from .const import DOMAIN, CONF_CALENDAR_URL, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[str] = ["calendar"]
+PLATFORMS: list[str] = ["calendar", "sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

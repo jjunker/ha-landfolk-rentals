@@ -1,0 +1,21 @@
+# No configuration.yaml changes needed! The integration now automatically creates a sensor.
+# Just add this Markdown card to your dashboard:
+
+type: markdown
+content: |
+  ## 📅 Upcoming Rentals ({{ states('sensor.landfolk_upcoming_rentals') }})
+  
+  {% set events = state_attr('sensor.landfolk_upcoming_rentals', 'events') | default([]) %}
+  {% if events | length > 0 %}
+    {% for event in events[:10] %}
+  **{{ loop.index }}. {{ event.summary }}**
+  - 🏠 Check-in: {{ as_timestamp(event.start) | timestamp_custom('%A, %B %d at %H:%M', true) }}
+  - 🚪 Check-out: {{ as_timestamp(event.end) | timestamp_custom('%A, %B %d at %H:%M', true) }}
+  - 🌙 Duration: {{ event.nights }} night{{ 's' if event.nights != 1 else '' }}
+  
+    {% endfor %}
+  {% else %}
+  _No upcoming rentals scheduled_
+  {% endif %}
+  
+  <sub>Last updated: {{ relative_time(strptime(state_attr('sensor.landfolk_upcoming_rentals', 'last_updated'), '%Y-%m-%dT%H:%M:%S.%f%z')) }}</sub>
