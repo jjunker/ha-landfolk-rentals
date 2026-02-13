@@ -1,6 +1,9 @@
-# No configuration.yaml changes needed! The integration now automatically creates a sensor.
-# Just add this Markdown card to your dashboard:
+# Dashboard Card Examples for Landfolk Rentals Integration
+# Copy these card configurations to your Home Assistant dashboard
 
+# ============================================================================
+# 1. Full Upcoming Rentals List (with booking IDs and countdown)
+# ============================================================================
 type: markdown
 content: |
   ## 📅 Upcoming Rentals ({{ states('sensor.landfolk_upcoming_rentals') }})
@@ -9,9 +12,13 @@ content: |
   {% if events | length > 0 %}
     {% for event in events[:10] %}
   **{{ loop.index }}. {{ event.summary }}**
+  {% if event.booking_id %}
+  - 🔖 Booking ID: `{{ event.booking_id }}`
+  {% endif %}
   - 🏠 Check-in: {{ as_timestamp(event.start) | timestamp_custom('%A, %B %d at %H:%M', true) }}
   - 🚪 Check-out: {{ as_timestamp(event.end) | timestamp_custom('%A, %B %d at %H:%M', true) }}
   - 🌙 Duration: {{ event.nights }} night{{ 's' if event.nights != 1 else '' }}
+  - ⏰ In {{ event.days_until_checkin }} day{{ 's' if event.days_until_checkin != 1 else '' }}{% if event.days_until_checkin == 0 %} (today!){% endif %}
   
     {% endfor %}
   {% else %}
@@ -19,3 +26,116 @@ content: |
   {% endif %}
   
   <sub>Last updated: {{ relative_time(strptime(state_attr('sensor.landfolk_upcoming_rentals', 'last_updated'), '%Y-%m-%dT%H:%M:%S.%f%z')) }}</sub>
+
+# ============================================================================
+# 2. Compact Next Rental View
+# ============================================================================
+type: markdown
+content: |
+  {% set next = state_attr('sensor.landfolk_upcoming_rentals', 'next_rental') %}
+  {% if next %}
+  ## 🏠 Next Rental
+  
+  **{{ next.summary }}**
+  {% if next.booking_id %}(ID: {{ next.booking_id }}){% endif %}
+  
+  Check-in in **{{ next.days_until_checkin }} days**
+  - 📅 {{ as_timestamp(next.start) | timestamp_custom('%B %d, %Y at %H:%M') }}
+  - 🌙 {{ next.nights }} night{{ 's' if next.nights != 1 else '' }}
+  {% else %}
+  _No upcoming rentals_
+  {% endif %}
+
+# ============================================================================
+# 3. Active Rental Card (only shows during active rental)
+# ============================================================================
+type: conditional
+conditions:
+  - entity: binary_sensor.landfolk_active_rental
+    state: "on"
+card:
+  type: markdown
+  content: |
+    ## ✅ Active Rental
+    
+    **{{ state_attr('binary_sensor.landfolk_active_rental', 'summary') }}**
+    {% if state_attr('binary_sensor.landfolk_active_rental', 'booking_id') %}
+    Booking ID: `{{ state_attr('binary_sensor.landfolk_active_rental', 'booking_id') }}`
+    {% endif %}
+    
+    ⏱️ Checkout in: **{{ state_attr('binary_sensor.landfolk_active_rental', 'days_until_checkout') }}d {{ state_attr('binary_sensor.landfolk_active_rental', 'hours_until_checkout') }}h**
+    
+    Check-out: {{ as_timestamp(state_attr('binary_sensor.landfolk_active_rental', 'check_out')) | timestamp_custom('%A, %B %d at %H:%M') }}
+
+# ============================================================================
+# 4. Entity Cards (simple, clean interface)
+# ============================================================================
+type: entities
+title: Landfolk Rentals
+entities:
+  - entity: sensor.landfolk_upcoming_rentals
+    name: Upcoming Rentals
+  - entity: binary_sensor.landfolk_active_rental
+    name: Active Rental
+  - entity: calendar.landfolk_rentals
+    name: Calendar
+
+# ============================================================================
+# 5. Glance Card (compact overview)
+# ============================================================================
+type: glance
+title: Rental Status
+entities:
+  - entity: sensor.landfolk_upcoming_rentals
+    name: Upcoming
+  - entity: binary_sensor.landfolk_active_rental
+    name: Active Now
+
+# ============================================================================
+# 6. Rental Statistics Card
+# ============================================================================
+type: markdown
+content: |
+  ## 📊 Rental Statistics
+  
+  {% set upcoming = states('sensor.landfolk_upcoming_rentals') | int %}
+  {% set active = states('binary_sensor.landfolk_active_rental') %}
+  
+  - **Status:** {% if active == 'on' %}🟢 Occupied{% else %}🔴 Vacant{% endif %}
+  - **Upcoming Rentals:** {{ upcoming }}
+  {% set next = state_attr('sensor.landfolk_upcoming_rentals', 'next_rental') %}
+  {% if next %}
+  - **Next Check-in:** {{ next.days_until_checkin }} days
+  - **Next Duration:** {{ next.nights }} nights
+  {% endif %}
+
+# ============================================================================
+# 7. Vertical Stack (combined view)
+# ============================================================================
+type: vertical-stack
+cards:
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.landfolk_active_rental
+        state: "on"
+    card:
+      type: markdown
+      content: |
+        ### ✅ Currently Occupied
+        Checkout: {{ as_timestamp(state_attr('binary_sensor.landfolk_active_rental', 'check_out')) | timestamp_custom('%a %b %d at %H:%M') }}
+  
+  - type: markdown
+    content: |
+      ### 📅 Next {{ states('sensor.landfolk_upcoming_rentals') }} Rental{{ 's' if states('sensor.landfolk_upcoming_rentals') | int != 1 else '' }}
+      {% set events = state_attr('sensor.landfolk_upcoming_rentals', 'events') | default([]) %}
+      {% for event in events[:3] %}
+      **{{ event.summary }}** - {{ as_timestamp(event.start) | timestamp_custom('%b %d') }} ({{ event.days_until_checkin }}d)
+      {% endfor %}
+
+# ============================================================================
+# Tips:
+# - Use conditional cards to show/hide based on active rental state
+# - Customize date formats with timestamp_custom()
+# - Add more attributes like booking_id, hours_until_checkout, etc.
+# - Combine with other cards (weather, climate) for a complete rental dashboard
+# ============================================================================

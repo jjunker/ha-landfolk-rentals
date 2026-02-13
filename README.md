@@ -88,9 +88,13 @@ content: |
   {% if events | length > 0 %}
     {% for event in events[:10] %}
   **{{ loop.index }}. {{ event.summary }}**
+  {% if event.booking_id %}
+  - 🔖 Booking ID: `{{ event.booking_id }}`
+  {% endif %}
   - 🏠 Check-in: {{ as_timestamp(event.start) | timestamp_custom('%A, %B %d at %H:%M', true) }}
   - 🚪 Check-out: {{ as_timestamp(event.end) | timestamp_custom('%A, %B %d at %H:%M', true) }}
   - 🌙 Duration: {{ event.nights }} night{{ 's' if event.nights != 1 else '' }}
+  - ⏰ In {{ event.days_until_checkin }} day{{ 's' if event.days_until_checkin != 1 else '' }}
   
     {% endfor %}
   {% else %}
@@ -99,6 +103,8 @@ content: |
   
   <sub>Last updated: {{ relative_time(strptime(state_attr('sensor.landfolk_upcoming_rentals', 'last_updated'), '%Y-%m-%dT%H:%M:%S.%f%z')) }}</sub>
 ```
+
+For more dashboard examples, see [dashboard-example.yaml](dashboard-example.yaml).
 
 ## Automation Examples
 

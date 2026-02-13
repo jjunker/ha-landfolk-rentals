@@ -2,6 +2,15 @@
 
 This document contains various automation examples showing how to use the Landfolk Rentals integration in your Home Assistant setup.
 
+## What's New
+
+The integration now includes:
+- ✅ **Exclude Blocked Periods** - Configure to ignore "Blocked" calendar entries
+- ✅ **Booking ID Extraction** - Automatically parses booking IDs from summaries
+- ✅ **Time Calculations** - Days/hours until check-in and checkout
+- ✅ **Dynamic Icons** - Icons change based on state
+- ✅ **Device Grouping** - All entities grouped under one device
+
 ## Table of Contents
 
 - [Guest Mode Automations](#guest-mode-automations)
@@ -9,6 +18,7 @@ This document contains various automation examples showing how to use the Landfo
 - [Climate Control](#climate-control)
 - [Security & Access Control](#security--access-control)
 - [Lighting Automations](#lighting-automations)
+- [Using New Features](#using-new-features)
 
 ## Guest Mode Automations
 
@@ -361,3 +371,100 @@ card:
 - Use the sensor for counting and displaying upcoming rentals
 - Combine multiple conditions for complex scenarios
 - Test automations carefully before deploying to production
+
+---
+
+## Using New Features
+
+### Booking ID in Notifications
+
+```yaml
+automation:
+  - alias: "Guest checked in with booking ID"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.landfolk_active_rental
+        to: "on"
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "Guest Arrival"
+          message: >
+            Guest for booking {{ state_attr('binary_sensor.landfolk_active_rental', 'booking_id') }} 
+            has checked in. They'll stay for {{ state_attr('binary_sensor.landfolk_active_rental', 'nights') }} nights.
+```
+
+### Countdown-Based Automations
+
+**Turn on heating 3 days before arrival:**
+```yaml
+automation:
+  - alias: "Start heating preparation"
+    trigger:
+      - platform: time_pattern
+        hours: "/6"  # Check every 6 hours
+    condition:
+      - condition: template
+        value_template: >
+          {% set events = state_attr('sensor.landfolk_upcoming_rentals', 'events') | default([]) %}
+          {{ events | length > 0 and events[0].days_until_checkin <= 3 }}
+    action:
+      - service: climate.turn_on
+        target:
+          entity_id: climate.house
+```
+
+**Send reminder 24 hours before checkout:**
+```yaml
+automation:
+  - alias: "Checkout reminder"
+    trigger:
+      - platform: time_pattern
+        hours: "/1"  # Check hourly
+    condition:
+      - condition: state
+        entity_id: binary_sensor.landfolk_active_rental
+        state: "on"
+      - condition: template
+        value_template: >
+          {{ state_attr('binary_sensor.landfolk_active_rental', 'hours_until_checkout') <= 24 }}
+    action:
+      - service: notify.mobile_app
+        data:
+          message: "Checkout is in {{ state_attr('binary_sensor.landfolk_active_rental', 'hours_until_checkout') }} hours"
+```
+
+### Using Exclude Blocked Feature
+
+The integration now excludes "Blocked" periods from rental counts by default. To change this behavior:
+
+1. Go to **Settings** → **Devices & Services**
+2. Find "Landfolk Rentals Calendar"
+3. Click **Configure**
+4. Toggle "Exclude 'Blocked' periods from rental counts"
+
+This means:
+- `sensor.landfolk_upcoming_rentals` only counts actual bookings
+- `binary_sensor.landfolk_active_rental` won't trigger during blocked periods
+- `calendar.landfolk_rentals` still shows all events for visibility
+
+### Tracking Multiple Properties
+
+If you have multiple Landfolk properties, add each as a separate integration instance:
+
+```yaml
+automation:
+  - alias: "Any property occupied"
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.landfolk_active_rental  # Property 1
+          - binary_sensor.landfolk_active_rental_2  # Property 2
+        to: "on"
+    action:
+      - service: notify.mobile_app
+        data:
+          message: >
+            Property {{ trigger.to_state.attributes.friendly_name }} 
+            is now occupied (Booking: {{ trigger.to_state.attributes.booking_id }})
+```
