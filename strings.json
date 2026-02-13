@@ -20,5 +20,19 @@
     "abort": {
       "already_configured": "Calendar is already configured"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Landfolk Rentals Calendar",
+        "description": "Update your calendar settings. Changes will be applied immediately.",
+        "data": {
+          "calendar_url": "Calendar URL",
+          "checkin_time": "Check-in Time (HH:MM)",
+          "checkout_time": "Check-out Time (HH:MM)",
+          "exclude_blocked": "Exclude 'Blocked' periods from rental counts"
+        }
+      }
+    }
   }
 }
