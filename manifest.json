@@ -1,11 +1,11 @@
 {
   "domain": "landfolk_rentals",
   "name": "Landfolk Rentals Calendar",
-  "codeowners": ["@yourusername"],
+  "codeowners": ["@jjunker"],
   "config_flow": true,
-  "documentation": "https://github.com/yourusername/landfolk_rentals",
+  "documentation": "https://github.com/jjunker/ha-landfolk-rentals",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/yourusername/landfolk_rentals/issues",
+  "issue_tracker": "https://github.com/jjunker/ha-landfolk-rentals/issues",
   "requirements": ["icalendar==5.0.11", "recurring-ical-events==2.0.2"],
   "version": "0.1.0"
 }
