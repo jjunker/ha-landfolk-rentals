@@ -7,7 +7,8 @@
         "data": {
           "calendar_url": "Calendar URL",
           "checkin_time": "Check-in Time (HH:MM)",
-          "checkout_time": "Check-out Time (HH:MM)"
+          "checkout_time": "Check-out Time (HH:MM)",
+          "exclude_blocked": "Exclude 'Blocked' periods from rental counts"
         }
       }
     },

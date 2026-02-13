@@ -18,8 +18,10 @@ from .const import (
     CONF_CALENDAR_URL,
     CONF_CHECKIN_TIME,
     CONF_CHECKOUT_TIME,
+    CONF_EXCLUDE_BLOCKED,
     DEFAULT_CHECKIN_TIME,
     DEFAULT_CHECKOUT_TIME,
+    DEFAULT_EXCLUDE_BLOCKED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,6 +87,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_CHECKOUT_TIME, 
                     default=DEFAULT_CHECKOUT_TIME
                 ): str,
+                vol.Optional(
+                    CONF_EXCLUDE_BLOCKED,
+                    default=DEFAULT_EXCLUDE_BLOCKED
+                ): bool,
             }
         )
 
