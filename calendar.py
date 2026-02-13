@@ -128,8 +128,7 @@ class LandfolkCalendar(CalendarEntity):
                 end = dtend
             else:
                 # Date only - apply check-out time
-                # Note: iCal DTEND is exclusive, so if booking is 20250829-20250831,
-                # checkout is on 20250831 at the configured time
+                # Landfolk's DTEND represents the actual checkout date (not exclusive)
                 end = datetime.combine(dtend, datetime.min.time())
                 end = end.replace(hour=checkout_hour, minute=checkout_minute)
             
