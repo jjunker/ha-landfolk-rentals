@@ -42,6 +42,13 @@ class LandfolkCalendar(CalendarEntity):
         self._attr_name = "Landfolk Rentals"
         self._attr_unique_id = f"{DOMAIN}_{config_entry.entry_id}"
         self._event: CalendarEvent | None = None
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, config_entry.entry_id)},
+            "name": "Landfolk Rentals",
+            "manufacturer": "Landfolk",
+            "model": "Calendar Integration",
+            "entry_type": "service",
+        }
         
         # Get configurable check-in/out times
         self._checkin_time = config_entry.data.get(
