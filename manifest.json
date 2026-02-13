@@ -4,8 +4,9 @@
   "codeowners": ["@jjunker"],
   "config_flow": true,
   "documentation": "https://github.com/jjunker/ha-landfolk-rentals",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/jjunker/ha-landfolk-rentals/issues",
-  "requirements": ["icalendar==5.0.11", "recurring-ical-events==2.0.2"],
+  "requirements": ["icalendar==5.0.13", "recurring-ical-events==2.2.3"],
   "version": "0.1.0"
 }
