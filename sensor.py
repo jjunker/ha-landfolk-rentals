@@ -35,8 +35,14 @@ class LandfolkUpcomingRentalsSensor(SensorEntity):
         self._config_entry = config_entry
         self._attr_name = "Landfolk Upcoming Rentals"
         self._attr_unique_id = f"{DOMAIN}_{config_entry.entry_id}_upcoming"
-        self._attr_icon = "mdi:calendar-multiple"
         self._attr_native_unit_of_measurement = "rentals"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, config_entry.entry_id)},
+            "name": "Landfolk Rentals",
+            "manufacturer": "Landfolk",
+            "model": "Calendar Integration",
+            "entry_type": "service",
+        }
         
         # Get configurable check-in/out times
         from .const import (
@@ -58,6 +64,17 @@ class LandfolkUpcomingRentalsSensor(SensorEntity):
         )
 
     @property
+    def icon(self) -> str:
+        """Return icon based on state."""
+        count = self.native_value
+        if count == 0:
+            return "mdi:calendar-blank"
+        elif count == 1:
+            return "mdi:calendar-check"
+        else:
+            return "mdi:calendar-multiple"
+
+    @property
     def native_value(self) -> int:
         """Return the number of upcoming rentals."""
         events = self._get_upcoming_events()
@@ -70,19 +87,36 @@ class LandfolkUpcomingRentalsSensor(SensorEntity):
         
         # Format events for easy consumption in templates
         formatted_events = []
+        now = dt_util.now()
+        
         for event in events[:50]:  # Limit to 50 events to avoid attribute size issues
             # Calculate nights (date difference, not time difference)
             checkin_date = event["start"].date()
             checkout_date = event["end"].date()
             nights = (checkout_date - checkin_date).days
             
+            # Extract booking ID from summary (e.g., "Booking #b75001f9")
+            import re
+            booking_id = None
+            if match := re.search(r'#([a-zA-Z0-9]+)', event["summary"]):
+                booking_id = match.group(1)
+            
+            # Calculate time until check-in
+            seconds_until_checkin = (event["start"] - now).total_seconds()
+            days_until_checkin = int(seconds_until_checkin / 86400)
+            hours_until_checkin = int((seconds_until_checkin % 86400) / 3600)
+            
             formatted_events.append({
                 "summary": event["summary"],
+                "booking_id": booking_id,
                 "start": event["start"].isoformat(),
                 "end": event["end"].isoformat(),
                 "nights": nights,
                 "duration_days": (event["end"] - event["start"]).days,
                 "duration_hours": (event["end"] - event["start"]).seconds // 3600,
+                "days_until_checkin": days_until_checkin,
+                "hours_until_checkin": hours_until_checkin,
+                "seconds_until_checkin": int(seconds_until_checkin),
             })
         
         next_event = formatted_events[0] if formatted_events else None

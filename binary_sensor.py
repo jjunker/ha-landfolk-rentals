@@ -45,7 +45,13 @@ class LandfolkActiveRentalSensor(BinarySensorEntity):
         self._attr_name = "Landfolk Active Rental"
         self._attr_unique_id = f"{DOMAIN}_{config_entry.entry_id}_active"
         self._attr_device_class = BinarySensorDeviceClass.OCCUPANCY
-        self._attr_icon = "mdi:home-account"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, config_entry.entry_id)},
+            "name": "Landfolk Rentals",
+            "manufacturer": "Landfolk",
+            "model": "Calendar Integration",
+            "entry_type": "service",
+        }
         
         # Get configurable check-in/out times and exclude blocked option
         from .const import CONF_EXCLUDE_BLOCKED, DEFAULT_EXCLUDE_BLOCKED
@@ -62,6 +68,13 @@ class LandfolkActiveRentalSensor(BinarySensorEntity):
         self._current_event = None
 
     @property
+    def icon(self) -> str:
+        """Return icon based on state."""
+        if self.is_on:
+            return "mdi:home-account"
+        return "mdi:home-outline"
+
+    @property
     def is_on(self) -> bool:
         """Return true if there's an active rental."""
         return self._current_event is not None
@@ -70,11 +83,28 @@ class LandfolkActiveRentalSensor(BinarySensorEntity):
     def extra_state_attributes(self) -> dict:
         """Return additional attributes."""
         if self._current_event:
+            now = dt_util.now()
+            
+            # Extract booking ID from summary
+            import re
+            booking_id = None
+            if match := re.search(r'#([a-zA-Z0-9]+)', self._current_event["summary"]):
+                booking_id = match.group(1)
+            
+            # Calculate time until checkout
+            seconds_until_checkout = (self._current_event["end"] - now).total_seconds()
+            days_until_checkout = int(seconds_until_checkout / 86400)
+            hours_until_checkout = int((seconds_until_checkout % 86400) / 3600)
+            
             return {
                 "summary": self._current_event["summary"],
+                "booking_id": booking_id,
                 "check_in": self._current_event["start"].isoformat(),
                 "check_out": self._current_event["end"].isoformat(),
                 "nights": (self._current_event["end"].date() - self._current_event["start"].date()).days,
+                "days_until_checkout": days_until_checkout,
+                "hours_until_checkout": hours_until_checkout,
+                "seconds_until_checkout": int(seconds_until_checkout),
             }
         return {}
 
