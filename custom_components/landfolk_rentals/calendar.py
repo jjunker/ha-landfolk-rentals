@@ -14,8 +14,10 @@ from .const import (
     DOMAIN,
     CONF_CHECKIN_TIME,
     CONF_CHECKOUT_TIME,
+    CONF_EXCLUDE_BLOCKED,
     DEFAULT_CHECKIN_TIME,
     DEFAULT_CHECKOUT_TIME,
+    DEFAULT_EXCLUDE_BLOCKED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,6 +59,13 @@ class LandfolkCalendar(CalendarEntity):
         self._checkout_time = config_entry.data.get(
             CONF_CHECKOUT_TIME, DEFAULT_CHECKOUT_TIME
         )
+        self._exclude_blocked = config_entry.data.get(
+            CONF_EXCLUDE_BLOCKED, DEFAULT_EXCLUDE_BLOCKED
+        )
+
+    def _is_excluded(self, event: CalendarEvent) -> bool:
+        """Return True if the event is a blocked period that should be hidden."""
+        return self._exclude_blocked and "blocked" in event.summary.lower()
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -78,7 +87,7 @@ class LandfolkCalendar(CalendarEntity):
         for component in calendar.walk():
             if component.name == "VEVENT":
                 event = self._parse_event(component)
-                if event and event.start >= now:
+                if event and event.start >= now and not self._is_excluded(event):
                     events.append(event)
         
         # Sort events by start time and get the next one
@@ -101,7 +110,12 @@ class LandfolkCalendar(CalendarEntity):
         for component in calendar.walk():
             if component.name == "VEVENT":
                 event = self._parse_event(component)
-                if event and event.start < end_date and event.end > start_date:
+                if (
+                    event
+                    and event.start < end_date
+                    and event.end > start_date
+                    and not self._is_excluded(event)
+                ):
                     events.append(event)
         
         return sorted(events, key=lambda e: e.start)

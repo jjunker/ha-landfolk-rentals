@@ -441,12 +441,14 @@ The integration now excludes "Blocked" periods from rental counts by default. To
 1. Go to **Settings** → **Devices & Services**
 2. Find "Landfolk Rentals Calendar"
 3. Click **Configure**
-4. Toggle "Exclude 'Blocked' periods from rental counts"
+4. Toggle "Exclude 'Blocked' periods (calendar, sensors and automations)"
 
 This means:
 - `sensor.landfolk_upcoming_rentals` only counts actual bookings
 - `binary_sensor.landfolk_active_rental` won't trigger during blocked periods
-- `calendar.landfolk_rentals` still shows all events for visibility
+- `calendar.landfolk_rentals` hides blocked periods, so calendar-triggered automations won't fire for them
+
+Turn the option off if you want blocked periods to appear in the calendar (they will then also trigger calendar automations).
 
 ### Tracking Multiple Properties
 
